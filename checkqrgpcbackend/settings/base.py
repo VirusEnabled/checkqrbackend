@@ -34,12 +34,12 @@ def get_env_variable(var_name):
 # See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-he0@q(ho@0x8+$2jk#)qld434m!%9hg&@r0ogyeoo2*5qd&0#y'
+SECRET_KEY = get_env_variable('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = get_env_variable('DEBUG') == 'True'
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -51,7 +51,14 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'corsheaders'
+    'rest_framework',
+    'rest_framework.authtoken',
+    'corsheaders',
+    'simple_history',
+    'apps.utils',
+    'apps.application',
+    'apps.qr',
+    'apps.api',
 ]
 
 MIDDLEWARE = [
@@ -62,6 +69,7 @@ MIDDLEWARE = [
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
+    'simple_history.middleware.HistoryRequestMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
@@ -177,7 +185,7 @@ STATIC_URL = f'/static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # FRONTEND HOST LOC
-FRONT_HOSTNAME = get_env_variable('FRONT_HOSTNAME')
+# FRONT_HOSTNAME = get_env_variable('FRONT_HOSTNAME')
 
 #CELERY
 BROKER_URL = get_env_variable('BROKER_URL')

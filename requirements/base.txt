@@ -58,3 +58,4 @@ pytz
 selenium
 pymysql
 mysqlclient
+django-simple-history
