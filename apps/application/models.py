@@ -25,6 +25,10 @@ class ApplicationConfiguration(BaseModel,
                                           null=True,
                                           blank=True)
     timeout = models.IntegerField(default=40)
+    implements_input_search = models.BooleanField(default=False)
+    implements_checkout = models.BooleanField(default=False)
+    needs_user_secret = models.BooleanField(default=False)
+    uses_main_credentials = models.BooleanField(default=False)
 
     def __str__(self) -> str:
         return f"Config for App: {self.application}"

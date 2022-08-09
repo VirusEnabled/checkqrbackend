@@ -7,7 +7,10 @@ from datetime import datetime, timedelta
 from apps.utils.services.initial_data.base import set_default_data
 from rest_framework import test
 from unittest import skip
-
+from apps.application.models import(
+    Application,
+    ApplicationConfiguration
+)
 
 class BaseTestCaseBuilder(TestCase):
 
@@ -36,29 +39,3 @@ class BaseTestCaseBuilder(TestCase):
         # cls.api_client = test.APIClient()
         # cls.api_client.credentials(HTTP_AUTHORIZATION=cls.
         #                            header['Authorization'])
-
-    @classmethod
-    def create_dummy_property(cls):
-        """
-        tests the creation of the
-        property
-        """
-        location = "Puntacana-Dominican Republic"
-        name = 'Base Puntacana Property'
-        email = 'FGPC@puntacana.com'
-        phone_number = '8298899113'
-        prop = Property(location=location, name=name,
-                        email=email,
-                        phone_number=phone_number,
-                        )
-        prop.save()
-        config = PropertyConfiguration.objects.create(
-            property=prop,
-            merchant=cls.base_merchant,
-            success_url='http://google.com',
-            property_identifier='TERCEROS'
-
-        )
-        return prop
-
-

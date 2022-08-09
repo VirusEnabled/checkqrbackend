@@ -1,8 +1,8 @@
 from django.urls import path
-import views
+from . import views
 
 app_name = 'apps.api'
 
-url_patterns = [
+urlpatterns = [
     path('', view=views.HomeApiView.as_view(), name='home')
 ]

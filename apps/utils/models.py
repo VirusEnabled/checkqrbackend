@@ -6,11 +6,11 @@ class BaseModel(models.Model):
     """
     generic model
     """
-    created_at = models.DateTimeField(auto_created=True)
-    updated_at = models.DateTimeField(auto_created=True)
+    created_at = models.DateTimeField(auto_now=True)
+    updated_at = models.DateTimeField(auto_now=True)
     uuid = models.UUIDField(default=uuid.uuid4,
                             editable=False)
-    history = HistoricalRecords()
+    history = HistoricalRecords(inherit=True)
 
 
     class Meta:

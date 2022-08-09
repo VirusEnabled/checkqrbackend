@@ -23,7 +23,7 @@ def setup_production_default():
     bookings_fgpc_confirm_url = (ApplicationUrl.
                                 objects.
                                 get_or_create(
-                                    name='confirm booking',
+                                    name='confirm_booking',
                                     application=bookings_fgpc,
                                     description='confirms the given booking',
                                     url='confirm_booking/'
@@ -49,7 +49,7 @@ def setup_develop_default():
     bookings_dev_fgpc_confirm_url = (ApplicationUrl.
                                      objects.
                                      get_or_create(
-                                        name='confirm booking',
+                                        name='confirm_booking',
                                         application=bookings_dev_fgpc,
                                         description='confirms the given booking',
                                         url='confirm_booking/'
