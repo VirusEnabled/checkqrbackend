@@ -19,7 +19,7 @@ def set_default_develop_data():
                User.
                objects.
                get_or_create(
-                   username='FPGC qr reader',
+                   username='FPGC_qr_reader',
                    password=make_password('@12345678')
                )[0])
 
