@@ -40,7 +40,9 @@ class LoginQrValidator(GenericAPIView):
         logged in.
         :returns: JsonResponse
         """
-        response = {}
+        response = {'data':{},
+                    'success': False,
+                    'error': {}}
         take_status = status.HTTP_200_OK
         serialized_request = (self.
                               serializer_class(
@@ -53,17 +55,19 @@ class LoginQrValidator(GenericAPIView):
                                 username=cleaned['username'],
                                 password=cleaned['password'])
             if user:
-                response['token'] = f'Token {user.auth_token.key}'
+                response['data']['token'] = f'Token {user.auth_token.key}'
                 # loads the configuration for the user
-                response['configuration'] = (user.
+                response['data']['configuration'] = (user.
                                              qr_validator.
                                              get_logged_in_config())
-                response['username'] = user.username
+                response['data']['username'] = user.username
+                response['success'] = True
             else:
-                response['error'] = 'bad_credentials'
-                take_status = status.HTTP_404_NOT_FOUND
+                response['error']['name'] = 'bad_credentials'
+
         else:
-            response['error'] = 'bad_request'
+            response['error']['name'] = 'bad_request'
+            response['error']['detail'] = serialized_request.error_messages
             take_status = status.HTTP_400_BAD_REQUEST
 
         return Response(data=response, status=take_status)
