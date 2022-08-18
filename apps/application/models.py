@@ -4,7 +4,9 @@ import apps.application.services as services
 
 
 class Application(BaseModel,
-                  services.ApplicationService):
+                  services.ApplicationService,
+                  services.ApplicationApiLoader):
+
     name = models.CharField(max_length=200)
     description = models.TextField()
 

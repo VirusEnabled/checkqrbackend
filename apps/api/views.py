@@ -4,7 +4,8 @@ from rest_framework.response import Response
 from rest_framework import status
 from apps.qr import models as qr_models
 from apps.qr import serializers as qr_ser
-from django.contrib.auth import authenticate
+from django.contrib.auth import authenticate, logout
+from rest_framework.permissions import IsAuthenticated
 
 
 class HomeApiView(GenericAPIView):
@@ -73,21 +74,10 @@ class LoginQrValidator(GenericAPIView):
         return Response(data=response, status=take_status)
 
 
-
 class LogOutQrValidator(GenericAPIView):
     model_name = qr_models.QRValidator
     http_method_names = ['post']
-    permission_classes = []
-
-    def get_object(self):
-        """
-        overrides the model
-        loading.
-        """
-        obj = (self.model_name.
-               objects.filter(user__username=
-                    self.request.data['username']))
-        return obj.last() if obj.exists() else None
+    permission_classes = [IsAuthenticated]
 
     def post(self, request, *args, **kwargs):
         """
@@ -99,28 +89,33 @@ class LogOutQrValidator(GenericAPIView):
         """
         response = {}
         take_status = status.HTTP_200_OK
-        serialized_request = (self.
-                              serializer_class(
-                                    data=request.
-                                    data))
+        validator = request.user.qr_validator
+        validator.change_token()
+        logout(request)
+        return Response(data=response, status=take_status)
 
-        if serialized_request.is_valid():
-            cleaned = serialized_request.validated_data
-            user = authenticate(request,
-                                username=cleaned['username'],
-                                password=cleaned['password'])
-            if user:
-                response['token'] = f'Token {user.auth_token.key}'
-                # loads the configuration for the user
-                response['configuration'] = (user.
-                                             qr_validator.
-                                             get_logged_in_config())
-                response['username'] = user.username
-            else:
-                response['error'] = 'bad_credentials'
-                take_status = status.HTTP_404_NOT_FOUND
-        else:
-            response['error'] = 'bad_request'
-            take_status = status.HTTP_400_BAD_REQUEST
 
+class SearchQRView(GenericAPIView):
+    """
+    searches in the application
+    the data and returns it to the
+    user
+
+    the params required are:
+        qr_data: data captured by the qr scanner
+        or input search box
+        url_name: name of the url to use in
+        the app. the name must exist otherwise
+        it won't work.
+    """
+    http_method_names = ['post']
+    permission_classes = [IsAuthenticated]
+    
+    def post(self, request, **kwargs):
+        """
+        implements the search based
+        on what you need to implement
+        """
+        response = {'data':{}, }
+        take_status = status.HTTP_200_OK
         return Response(data=response, status=take_status)

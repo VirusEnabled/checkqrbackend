@@ -7,6 +7,44 @@ class ValidatorService(object):
     for the application
     """
 
+    @property
+    def token(self):
+        """
+        shortcut to the
+        token for the user
+        :returns: string
+        """
+        return self.user.auth_token.key
+
+    def get_credentials(self):
+        """
+        gets the credentials
+        based on the saved records
+        :returns: dict
+        """
+        initial_header  = {'Authorization': self.credentials.token,
+                           }
+        # might need modification based on changes in apps
+        if self.credentials.secret:
+            initial_header['Application'] = self.credentials.secret
+
+        return initial_header
+
+
+    def change_token(self):
+        """
+        changes the token
+        for the user so that they 
+        can have a new token every
+        time they login.
+        :returns: None
+        """
+        from rest_framework.authtoken.models import Token
+        user_token = self.user.auth_token
+        new_key = user_token.generate_key()
+        user_token.delete()
+        Token.objects.create(user=self.user)
+
     def get_logged_in_config(self):
         """
         loads all of the information required
