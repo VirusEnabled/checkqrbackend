@@ -92,6 +92,7 @@ class LogOutQrValidator(GenericAPIView):
         validator = request.user.qr_validator
         validator.change_token()
         logout(request)
+        response['success'] = True
         return Response(data=response, status=take_status)
 
 
@@ -110,12 +111,33 @@ class SearchQRView(GenericAPIView):
     """
     http_method_names = ['post']
     permission_classes = [IsAuthenticated]
+    serializer_class = qr_ser.QRSearchSerializer
     
     def post(self, request, **kwargs):
         """
         implements the search based
         on what you need to implement
         """
-        response = {'data':{}, }
+        response = {'data':{},
+                    'success': False,
+                    'error': {}}
         take_status = status.HTTP_200_OK
+        validator = request.user.qr_validator
+        application = validator.application
+        serialized = self.serializer_class(data=request.data)
+        if serialized.is_valid():
+            cleaned = serialized.validated_data
+            qr_response = (application.
+                           perform_request(url_name=cleaned['url_name'],
+                                           validator=validator,
+                                           qr_data=cleaned['qr_data']))
+            response['success'] = qr_response['status']
+            response['data'] = qr_response['response'].get('data', 'message')
+            take_status = qr_response['status_code']
+
+        else:
+            response['error']['name'] = 'bad_request'
+            response['error']['detail'] = serialized.error_messages
+            take_status = status.HTTP_400_BAD_REQUEST 
+
         return Response(data=response, status=take_status)

@@ -1,8 +1,10 @@
 from apps.application.enums import HttpMethods
 # import requests
 from apps.utils.services.base_api import BaseApi
+from apps.utils.services import dummies
 
-
+# this service might become a stand alone
+# rather than a helper
 class ApplicationApiLoader(BaseApi):
     """
     implements the searches
@@ -14,18 +16,6 @@ class ApplicationApiLoader(BaseApi):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
-    # def get_header(self):
-    #     """
-    #     gets the header
-    #     for all requests
-    #     required in order to manage
-    #     the implementation of bookeo API
-    #     returns: dict
-    #     """
-    #     return {
-    #         'Content-Type': 'application/json'
-    #     }
-
     def setup(self):
         """
         overrides the main url
@@ -33,7 +23,8 @@ class ApplicationApiLoader(BaseApi):
         required information
         to start it up
         """
-        self.timeout = self.configuration.timeout
+        self.config = self.load_config()
+        self.timeout = self.config.timeout
         self.methods = {
             HttpMethods.get: self._get,
             HttpMethods.post: self._post,
@@ -42,6 +33,30 @@ class ApplicationApiLoader(BaseApi):
         }
         self.urls_base = self.preload_urls()
         self.headers = self.get_header()
+
+    def load_config(self):
+        """
+        gets the configuration
+        based on the required
+        parameters.
+
+        this is to avoid issues when the 
+        application is not created.
+        :returns: object
+        """
+        return (self.configuration
+                if hasattr(self, 'configuration')
+                else self.gen_config_dummy())
+
+    def gen_config_dummy(self):
+        """
+        creates an empty configuration
+        for testing and application
+        creation purposes
+        :return: object
+        """
+        configuration = dummies.DummyConfig()
+        return configuration
 
     def preload_urls(self):
         """
@@ -72,21 +87,6 @@ class ApplicationApiLoader(BaseApi):
                 if self.configuration.uses_main_credentials
                 else validator.get_credentials())    
 
-    def update_params(self, params, validator=None):
-        """
-        appends the credential
-        keys to make the request work.
-        :params:
-            params: dict. the request params.
-            validator: validator object to pull credentials
-        returns: dict
-        """
-        if validator:
-            credentials = self.get_credentials(validator)
-            for k in credentials.keys():
-                params[k] = credentials[k]
-        return params
-
     def get_main_credentials(self):
         """
         gets the main credentials
@@ -94,18 +94,33 @@ class ApplicationApiLoader(BaseApi):
         :returns: dict
         """
         initial_header  = {'Authorization': 
-                           self.configuration.
+                           self.config.
                            application_token
                            }
 
         # might need modification based on changes in apps
-        if self.configuration.application_secret:
-            initial_header['Application'] = (self.
-                                             configuration.
+        if self.config.application_secret:
+            initial_header['Application'] = (self.config.
                                              application_secret)
         return initial_header
+    
+    # needs to be updated
+    def build_url_params(self,**kwargs):
+        """
+        builds the url params
+        in case there's any additional
+        parameters for the url.
+        :params:
+            kwargs: dict.
+        :returns: dict
+        """
+        result = {}
 
-    def perform_request(self, url_name, validator, qr_data):
+        return result
+
+    def perform_request(self, url_name,
+                        validator, qr_data,
+                        param_url=None):
         """
         makes the validation of the 
         url provided and the qr_data
@@ -116,15 +131,21 @@ class ApplicationApiLoader(BaseApi):
             identifier has the http method to use
             validator: validator_object
             qr_data: dict: data coming from the frontend
+            param_url: str: could be a 
+            parameter to add to the link
+            ike an ID or a unique key
         :returns: dict: response from the service
         """
         url = self.urls_base[url_name]
-        headers = self.update_params(self.headers,
-                                     validator=validator)
+        crendentials = (self.
+                        get_credentials(validator=
+                                        validator))
+        headers = (self.
+                   attach_credentials_to_headers(
+                       credentials=crendentials))
         data = qr_data
-        url_param = None  # this will have to be specified in the url
-        params = {}
-        # import ipdb; ipdb.set_trace()
+        url_param = param_url
+        params = self.build_url_params()
         response = (self.
                     methods[url['url'].
                     http_method](url=url['url_go'],
@@ -132,8 +153,7 @@ class ApplicationApiLoader(BaseApi):
                                  data=data,
                                  url_param=url_param,
                                  params=params,
-                                 param=params,
-                                 validator=validator))
+                                 param=params))
 
         self.log_qr_reading(qr_data=data, url=url['url'],
                             response_code=response['status_code'],
@@ -162,146 +182,6 @@ class ApplicationApiLoader(BaseApi):
                           response=response.__str__(),
                           response_code=response_code)
 
-    
-    # def _get(self, **kwargs):
-    #     """
-    #     performs the GET method.
-
-    #     :params:
-    #         url_name: url to perform acction.
-    #         params: dict: params required for the method.
-    #         url_param: this is a param that will be placed in the url
-    #         rather than passed as paramter keys.
-    #     :returns: dict
-    #     """
-    #     import ipdb; ipdb.set_trace()
-    #     url_name = kwargs['url_name']
-    #     url_param = kwargs['url_param']
-    #     headers = kwargs['headers']
-    #     result = {}
-    #     url = self.urls_base.get(url_name)
-    #     if url_param:
-    #         url = f"{url}{url_param}/"
-    #     params = self.update_params(params)
-    #     headers =  headers if headers else self.headers
-    #     response = requests.get(url,
-    #                             headers=self.headers,
-    #                             params=params,
-    #                             timeout=self.timeout)
-    #     result['status'] = response.ok
-    #     result['response'] = response.json()
-    #     result['status_code'] = response.status_code
-
-    #     return result
-
-    # def _post(self, **kwargs):
-    #     """
-    #     performs the POST method.
-
-    #     :params:
-    #         url_name: url to perform acction.
-    #         data: dict: params required for the method.
-    #         url_param: specific param to be passed in
-    #         case of need directly in the url.
-    #         url_params: dict if passed
-    #         it provides all query params to be updated
-
-    #     :returns: dict
-    #     """
-    #     url_name = kwargs['url_name']
-    #     url_param = kwargs['url_param']
-    #     headers = kwargs['headers']
-    #     data = kwargs['data']
-    #     url_params = kwargs['param']
-    #     result = {}
-    #     url = self.urls_base.get(url_name)
-    #     validator = kwargs.get('validator', None)
-    #     if url_param:
-    #         url = f"{url}{url_param}/"
-    #     credentials = self.get_credentials(validator=validator)
-    #     if url_params:
-    #         credentials = self.update_params(url_params,
-    #                                          validator=validator)
-    #     dt = data
-    #     headers = headers if headers else self.headers
-    #     response = requests.post(url,
-    #                              headers=self.headers,
-    #                              json=dt,
-    #                              params=credentials,
-    #                             timeout=self.timeout)
-    #     result['status'] = response.ok
-    #     result['response'] = response.json()
-    #     result['status_code'] = response.status_code
-
-    #     return result
-
-    # def _put(self, **kwargs):
-    #     """
-    #     performs the PUT method.
-
-    #     :params:
-    #         url_name: url to perform acction.
-    #         params: dict: params required for the method.
-    #         url_param: specific param to be passed in
-    #         case of need directly in the url.
-    #     :returns: dict
-    #     """
-    #     url_name = kwargs['url_name']
-    #     url_param = kwargs['url_param']
-    #     headers = kwargs['headers']
-    #     data = kwargs['data']
-    #     result = {}
-    #     validator = kwargs.get('validator', None)
-    #     url = self.urls_base.get(url_name)
-    #     headers = headers if headers else self.headers
-
-    #     if url_param:
-    #         url = f"{url}{url_param}/"
-    #     credentials = self.get_credentials(validator=validator)
-    #     response = requests.put(url,
-    #                             headers=self.headers,
-    #                             json=data,
-    #                             params=credentials,
-    #                             timeout=self.timeout)
-    #     result['status'] = response.ok
-    #     result['response'] = response.json()
-    #     result['status_code'] = response.status_code
-
-    #     return result
-
-    # def _delete(self, **kwargs):
-    #     """
-    #     performs the DELETE method.
-
-    #     :params:
-    #         url_name: url to perform acction.
-    #         params: dict: params required for the method.
-    #         url_param: specific param to be passed in
-    #         case of need directly in the url.
-    #     :returns: dict
-    #     """
-    #     url_name = kwargs['url_name']
-    #     url_param = kwargs['url_param']
-    #     headers = kwargs['headers']
-    #     data = kwargs['data']
-    #     result = {}
-    #     headers =  headers if headers else self.headers
-    #     url = self.urls_base.get(url_name)
-    #     if url_param:
-    #         url = f"{url}{url_param}/"
-    #     credentials = self.get_credentials()
-    #     response = requests.delete(url,
-    #                                headers=self.headers,
-    #                                json=data,
-    #                                params=credentials,
-    #                                timeout=self.timeout)
-    #     result['response'] = {'message': "the object was deleted successfully"
-    #                           if not response.text else response.text}
-    #     result['status_code'] = response.status_code
-
-    #     return result
-
-
 
 class ApplicationService(object):
     """
@@ -329,6 +209,6 @@ class ApplicationService(object):
             url: application url object
         :returns: str
         """
-        return f"{self.configuration.base_url}{url.url}"
+        return f"{self.config.base_url}{url.url}"
 
     

@@ -1,5 +1,7 @@
 from apps.qr import models
 from django.contrib.auth.hashers import make_password
+
+
 def set_default_develop_data():
     """
     sets develop data for 
@@ -31,7 +33,8 @@ def set_default_develop_data():
                         application=initial_app,
                         credentials=qr_v_credentials)[0]
                     )
-    
+
+
 def set_up_qr_default_data():
     """
     sets the inital setup data

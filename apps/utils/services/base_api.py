@@ -43,15 +43,29 @@ class BaseApi(object):
         """
         raise NotImplementedError
 
+    def attach_credentials_to_headers(self, credentials):
+        """
+        attaches the credentials
+        to the headers
+        :params:
+            credentials: dict: credentials setup.
+        :returns: None
+        """
+        for key, val in credentials.items():
+            self.headers[key] = val
+
     def update_params(self, params, **kwargs):
         """
-        appends the credential
+        updates the params for the request
         keys to make the request work.
         :params:
             params: dict. the request params.
+            kwargs: dict: kwargs for the params
         returns: dict
         """
-        raise NotImplementedError
+        for k in kwargs.keys():
+            params[k] = kwargs[k]
+        return params
 
     def get_credentials(self, **kwargs):
         """
@@ -88,7 +102,6 @@ class BaseApi(object):
         url = kwargs['url']
         url_param = kwargs['url_param']
         headers = kwargs['headers']
-        validator = kwargs.get('validator', None)
         params = kwargs['params']
         data = kwargs.get('data', {})
         result = {}
@@ -127,18 +140,17 @@ class BaseApi(object):
         data = kwargs['data']
         url_params = kwargs['param']
         result = {}
-        validator = kwargs.get('validator', None)
+        parameters = {}
         if url_param:
             url = f"{url}{url_param}/"
-        credentials = self.get_credentials(validator=validator)
+
         if url_params:
-            credentials = self.update_params(url_params,
-                                             validator=validator)
+            parameters = self.update_params(url_params)
         headers = headers if headers else self.headers
         response = requests.post(url,
                                  headers=self.headers,
                                  json=data,
-                                 params=credentials,
+                                 params=parameters,
                                 timeout=self.timeout)
         result['status'] = response.ok
         result['response'] = response.json()
@@ -161,17 +173,19 @@ class BaseApi(object):
         url_param = kwargs['url_param']
         headers = kwargs['headers']
         data = kwargs['data']
+        url_params = kwargs['param']
         result = {}
-        validator = kwargs.get('validator', None)
-        headers = headers if headers else self.headers
-
+        parameters = {}
         if url_param:
             url = f"{url}{url_param}/"
-        credentials = self.get_credentials(validator=validator)
+
+        if url_params:
+            parameters = self.update_params(url_params)
+        headers = headers if headers else self.headers
         response = requests.put(url,
-                                headers=self.headers,
-                                json=data,
-                                params=credentials,
+                                 headers=self.headers,
+                                 json=data,
+                                 params=parameters,
                                 timeout=self.timeout)
         result['status'] = response.ok
         result['response'] = response.json()
@@ -194,18 +208,22 @@ class BaseApi(object):
         url_param = kwargs['url_param']
         headers = kwargs['headers']
         data = kwargs['data']
+        url_params = kwargs['param']
         result = {}
-        headers =  headers if headers else self.headers
+        parameters = {}
         if url_param:
             url = f"{url}{url_param}/"
-        credentials = self.get_credentials()
+
+        if url_params:
+            parameters = self.update_params(url_params)
+        headers = headers if headers else self.headers
         response = requests.delete(url,
-                                   headers=self.headers,
-                                   json=data,
-                                   params=credentials,
-                                   timeout=self.timeout)
-        result['response'] = {'message': "the object was deleted successfully"
-                              if not response.text else response.text}
+                                 headers=self.headers,
+                                 json=data,
+                                 params=parameters,
+                                timeout=self.timeout)
+        result['status'] = response.ok
+        result['response'] = response.json()
         result['status_code'] = response.status_code
 
         return result

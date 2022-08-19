@@ -23,7 +23,7 @@ class ValidatorCredential(BaseModel):
                               blank=True)
 
     def __str__(self) -> str:
-        return f'{self.application.name}\'s credentials'
+        return f'{self.name}\'s credentials'
 
 
 class QRValidator(BaseModel, services.ValidatorService):

@@ -3,12 +3,21 @@ from apps.utils.models import BaseModel
 import apps.application.services as services
 
 
+class ApplicationTag(BaseModel):
+    name = models.CharField(max_length=100, unique=True)
+
+    def __str__(self) -> str:
+        return self.name
+
 class Application(BaseModel,
                   services.ApplicationService,
                   services.ApplicationApiLoader):
 
     name = models.CharField(max_length=200)
     description = models.TextField()
+    tag = models.ForeignKey(ApplicationTag, on_delete=models.CASCADE,
+                            null=True, blank=True,
+                            related_name='applications')
 
     def __str__(self) -> str:
         return self.name

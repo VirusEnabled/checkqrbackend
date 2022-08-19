@@ -58,6 +58,7 @@ class ValidatorService(object):
                 configuration.implements_checkout,
                 'needs_input_search': self.application.
                 configuration.implements_input_search,
+                'application_tag': self.application.tag.name
                 }
     
     def build_urls_for_frontend(self):
