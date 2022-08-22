@@ -127,10 +127,11 @@ class SearchQRView(GenericAPIView):
         serialized = self.serializer_class(data=request.data)
         if serialized.is_valid():
             cleaned = serialized.validated_data
+            clean_data ={'qr_data': cleaned['qr_data']} 
             qr_response = (application.
                            perform_request(url_name=cleaned['url_name'],
                                            validator=validator,
-                                           qr_data=cleaned['qr_data']))
+                                           qr_data=clean_data))
             response['success'] = qr_response['status']
             response['data'] = qr_response['response'].get('data', 'message')
             take_status = qr_response['status_code']
