@@ -58,6 +58,13 @@ class ApplicationApiLoader(BaseApi):
         configuration = dummies.DummyConfig()
         return configuration
 
+    def gen_credentials_dummy(self):
+        """
+        generates a dummy
+        credential for the 
+        testing in case it's needed
+        """
+
     def preload_urls(self):
         """
         loads all of the urls

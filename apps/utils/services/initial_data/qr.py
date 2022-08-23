@@ -35,7 +35,7 @@ def set_default_develop_data():
                     )
 
 
-def set_up_qr_default_data():
+def set_up_qr_default_data(env='dev'):
     """
     sets the inital setup data
     we require in order to get 

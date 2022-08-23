@@ -11,6 +11,7 @@ from apps.application.models import(
     Application,
     ApplicationConfiguration
 )
+from apps.qr.models import User, Token
 
 class BaseTestCaseBuilder(TestCase):
 
@@ -22,20 +23,21 @@ class BaseTestCaseBuilder(TestCase):
         """
         super().setUpTestData()
         set_default_data()
-        # cls.service = BookeoAPIService()
-        # cls.admin_user = (g_models.User.
-        #                   objects.create(username='admin_tester',
-        #                                  email='admintest@punta.com',
-        #                                  password='test1234'))
-        # cls.base_merchant = Merchant.objects.create(name='AZUL',
-        #                                             number=9988988)
-        # cls.base_property = cls.create_dummy_property()
-        # cls.auth_token = (cls.base_property.
-        #                   master_user.auth_token.key)
-        # cls.header = {
-        #     'Authorization': f"Token {cls.auth_token}",
-        #     'Content-Type': "application/json"
-        # }
-        # cls.api_client = test.APIClient()
-        # cls.api_client.credentials(HTTP_AUTHORIZATION=cls.
-        #                            header['Authorization'])
+        cls.admin_user_data = {'username':'admin_tester',
+                                'email': 'admintest@punta.com',
+                                'password': 'test1234'}
+        cls.app_user_data = {'username':'FPGC_qr_reader',
+                                'password': '@12345678'}
+        cls.admin_user = (User.
+                          objects.create(username=cls.admin_user_data['username'],
+                                         email=cls.admin_user_data['email'],
+                                         password=cls.admin_user_data['password']))
+        cls.app_user = User.objects.get(username=cls.app_user_data['username'])
+        cls.auth_token = Token.objects.create(user=cls.admin_user)
+        cls.header = {
+            'Authorization': f"Token {cls.auth_token.key}",
+            'Content-Type': "application/json"
+        }
+        cls.api_client = test.APIClient()
+        cls.api_client.credentials(HTTP_AUTHORIZATION=cls.
+                                   header['Authorization'])
