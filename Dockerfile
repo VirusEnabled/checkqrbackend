@@ -2,8 +2,9 @@ FROM python:3.9
 WORKDIR /code
 RUN apt update && apt-get install -y netcat libaio1 alien
 
-COPY ./requirement.txt /code/requirements.txt
-RUN pip install --upgrade pip
+COPY ./requirements.txt /code/requirements.txt
+COPY ./requirements /code/requirements
+RUN pip install --upgrade pip==22.0.0
 RUN pip install -r requirements.txt
 
 COPY . /code/

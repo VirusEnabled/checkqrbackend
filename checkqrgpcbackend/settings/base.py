@@ -184,8 +184,6 @@ STATIC_URL = f'/static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# FRONTEND HOST LOC
-# FRONT_HOSTNAME = get_env_variable('FRONT_HOSTNAME')
 
 #CELERY
 BROKER_URL = get_env_variable('BROKER_URL')

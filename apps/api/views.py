@@ -70,7 +70,6 @@ class LoginQrValidator(GenericAPIView):
             response['error']['name'] = 'bad_request'
             response['error']['detail'] = serialized_request.error_messages
             take_status = status.HTTP_400_BAD_REQUEST
-
         return Response(data=response, status=take_status)
 
 
