@@ -1,0 +1,56 @@
+image: docker/compose
+
+options:
+  docker: true
+
+runTests: &runTests
+  name: Run test!
+  deployment: test
+  script:
+    - docker-compose --file testing.yml build
+    - &gt;
+      docker-compose run
+      --no-deps --rm app python -W ignore manage.py test
+      --settings=checkqrgpcbackend.settings.testing
+
+runReleaseTests: &runReleaseTests
+  name: Run pre release tests!
+  deployment: test
+  script:
+    - docker-compose --file release.yml build
+    - &gt;
+      docker-compose --file release.yml run
+      --no-deps --rm app python -W ignore manage.py test -v2
+      --settings=checkqrgpcbackend.settings.release
+      --exclude-tag=functional
+
+buildDevelopImage: &buildDevelopImage
+  name: Build develop image.
+  deployment: Development
+  script:
+    - echo 'Building for develop'
+    - docker login -u $DOCKER_HUB_USER -p $DOCKER_HUB_PASSWORD
+    - docker build -t aplicacionesgpc/checkqrgpcbackend:develop .
+    - docker push aplicacionesgpc/checkqrgpcbackend:develop
+
+buildProductionImage: &buildProductionImage
+  name: Build production image.
+  deployment: Production
+  script:
+    - echo 'Building for production'
+    - export GIT_TAG=$(echo $BITBUCKET_TAG)
+    - docker login -u $DOCKER_HUB_USER -p $DOCKER_HUB_PASSWORD
+    - docker build -t aplicacionesgpc/checkqrgpcbackend:${GIT_TAG} .
+    - docker push aplicacionesgpc/checkqrgpcbackend:${GIT_TAG}
+
+pipelines:
+  branches:
+    develop:
+      - step: *runTests
+      - step: *buildDevelopImage
+    release/*:
+      - step: *runReleaseTests
+  tags:
+    v*:
+      - step: *runReleaseTests
+      - step: *buildProductionImage
