@@ -11,6 +11,5 @@ COPY . /code/
 
 EXPOSE 80
 
-CMD python manage.py set_data_default && \
-    python manage.py collectstatic --noinput && \
+CMD python manage.py collectstatic --noinput && \
     gunicorn -c gunicorn.conf.py
