@@ -150,6 +150,7 @@ class ApplicationApiLoader(BaseApi):
         headers = (self.
                    attach_credentials_to_headers(
                        credentials=crendentials))
+        headers = self.headers
         data = qr_data
         url_param = param_url
         params = self.build_url_params()
