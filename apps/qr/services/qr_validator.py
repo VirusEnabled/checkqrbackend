@@ -69,9 +69,11 @@ class ValidatorService(object):
         """
         result = [{'name': url.name,
                    'requires_additional_format': 
-                   url.requires_additional_formating} 
+                   url.requires_additional_formating,
+                   'verbose_name': url.verbose_name,
+                   'is_only_search': url.is_only_search} 
                   for url in self.application.
-                    urls.all()]
+                    urls.filter(is_token_validate_url=False)]
 
 
         return result

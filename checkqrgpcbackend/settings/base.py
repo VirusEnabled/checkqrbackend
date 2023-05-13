@@ -15,7 +15,7 @@ import os
 import sys
 import dj_database_url
 from django.core.exceptions import ImproperlyConfigured
-
+from apps.utils.services.redis_management import RedisHandler
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 # BASE_DIR = Path(__file__).resolve().parent.parent
 BASE_DIR = os.path.dirname(os.path.dirname(
@@ -140,6 +140,10 @@ CORS_ALLOW_METHODS = [
     "POST",
 ]
 
+# CSRF CONFIG
+CSRF_TRUSTED_ORIGINS = ['https://*.grupopuntacana.com',
+                        'https://*.puntacana.com' ]
+
 # Password validation
 # https://docs.djangoproject.com/en/4.1/ref/settings/#auth-password-validators
 
@@ -194,3 +198,7 @@ CELERY_RESULT_SERIALIZER = 'json'
 DJANGO_CELERY_BEAT_TZ_AWARE = False
 CELERY_TIMEZONE = TIME_ZONE
 CELERYBEAT_SCHEDULER = 'django_celery_beat.schedulers.DatabaseScheduler'
+
+# REDIS MANAGEMENT
+
+REDIS_HANDLER = RedisHandler(BROKER_URL)

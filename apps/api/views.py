@@ -132,7 +132,7 @@ class SearchQRView(GenericAPIView):
                                            validator=validator,
                                            qr_data=clean_data))
             response['success'] = qr_response['status']
-            response['data'] = qr_response['response'].get('data', 'booking_not_found')
+            response['data'] = qr_response['response'].get('data', 'not_found')
             take_status = qr_response['status_code']
 
         else:

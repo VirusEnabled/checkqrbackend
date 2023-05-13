@@ -2,7 +2,7 @@ from apps.application.enums import HttpMethods
 # import requests
 from apps.utils.services.base_api import BaseApi
 from apps.utils.services import dummies
-
+from django.conf import settings
 # this service might become a stand alone
 # rather than a helper
 class ApplicationApiLoader(BaseApi):
@@ -92,7 +92,72 @@ class ApplicationApiLoader(BaseApi):
         """
         return (self.get_main_credentials()
                 if self.configuration.uses_main_credentials
-                else validator.get_credentials())    
+                else validator.get_credentials() if not 
+                self.configuration.uses_jwt_validation else
+                self.get_jwt_credentials(validator)) 
+
+    def get_jwt_credentials(self, validator=None):
+        """
+        this is a method that
+        gets the credentials from
+        the remote app and saves it in
+        redis
+
+        it verifies if the token is 
+        in memory if so it just returns
+        it else it goes remotely and
+        set the new one
+        """
+        key_finder = 'JWTTOKEN'
+        key = validator.uuid
+        existing = settings.REDIS_HANDLER.get_qr_validator_jwt(key)
+        result = {}
+        if existing['status']:
+            result['Authorization'] = f"Bearer {existing['data']['access']}"
+        else:
+            # we look for it remotely.
+            get_token_url =(self.urls.
+                            filter(name__contains=key_finder).
+                            last().name)
+            data = {
+                'username': validator.credentials.remote_username,
+                'password': validator.credentials.remote_password
+            }
+            url = self.urls_base[get_token_url]
+            headers=self.headers
+            params = {}
+            url_param = None
+            response = (self.methods['POST'](url=url['url_go'],
+                                 headers=headers,
+                                 data=data,
+                                 url_param=url_param,
+                                 params=params,
+                                 param=params))
+            if response['status']:
+                response_data = response['response']
+                staged =(settings.
+                         REDIS_HANDLER.
+                         set_qr_validator_jwt(key, response_data))
+                result['Authorization'] = f"Bearer {response_data['access']}"
+            else:
+                raise Exception(response['response'])            
+        return result
+
+    
+    def refresh_jwt_credentials(self, validator=None):
+        """
+        this is a method that
+        gets the credentials from
+        the app and saves it in
+        redis
+
+        it refreshes straight
+        forward and updates 
+        the redis file
+        then returns the new token.
+        """
+        key_finder = 'JWTREFRESH'
+
 
     def get_main_credentials(self):
         """
@@ -112,7 +177,7 @@ class ApplicationApiLoader(BaseApi):
         return initial_header
     
     # needs to be updated
-    def build_url_params(self,**kwargs):
+    def build_url_params(self, url_name, qr_data):
         """
         builds the url params
         in case there's any additional
@@ -144,16 +209,18 @@ class ApplicationApiLoader(BaseApi):
         :returns: dict: response from the service
         """
         url = self.urls_base[url_name]
-        crendentials = (self.
+        credentials = (self.
                         get_credentials(validator=
                                         validator))
         headers = (self.
                    attach_credentials_to_headers(
-                       credentials=crendentials))
+                       credentials=credentials))
         headers = self.headers
         data = qr_data
-        url_param = param_url
-        params = self.build_url_params()
+        url_param = (param_url
+                    if not url['url'].requires_additional_formating
+                    else data['qr_data'])
+        params = self.build_url_params(url_name, qr_data)
         response = (self.
                     methods[url['url'].
                     http_method](url=url['url_go'],
@@ -162,7 +229,6 @@ class ApplicationApiLoader(BaseApi):
                                  url_param=url_param,
                                  params=params,
                                  param=params))
-
         self.log_qr_reading(qr_data=data, url=url['url'],
                             response_code=response['status_code'],
                             response=response['response'],

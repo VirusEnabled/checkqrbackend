@@ -17,10 +17,14 @@ class ValidatorCredential(BaseModel):
     application = models.ForeignKey(Application,
                                     on_delete=models.CASCADE,
                                     related_name='registered_credentials')
-    token =  models.CharField(max_length=400)
+    token =  models.CharField(max_length=400,
+                              null=True,
+                              blank=True)
     secret = models.CharField(max_length=400,
                               null=True,
                               blank=True)
+    remote_username = models.CharField(max_length=200, null=True, blank=True)
+    remote_password = models.CharField(max_length=200, null=True, blank=True)
 
     def __str__(self) -> str:
         return f'{self.name}\'s credentials'
