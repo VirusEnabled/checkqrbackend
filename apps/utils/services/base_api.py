@@ -114,8 +114,11 @@ class BaseApi(object):
                                 params=params,
                                 timeout=self.timeout,
                                 json=data)
+        response_json = response.json()
         result['status'] = response.ok
-        result['response'] = response.json()
+        result['response'] = (response_json if 'data'
+                              in response_json.keys()
+                              else {'data': response_json})
         result['status_code'] = response.status_code
 
         return result

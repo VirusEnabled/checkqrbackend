@@ -112,38 +112,41 @@ class ApplicationApiLoader(BaseApi):
         key = validator.uuid
         existing = settings.REDIS_HANDLER.get_qr_validator_jwt(key)
         result = {}
-        if existing['status']:
-            result['Authorization'] = f"Bearer {existing['data']['access']}"
+        # if existing['status']:
+        #     result['Authorization'] = f"Bearer {existing['data']['access']}"
+        # else:
+        # we look for it remotely.
+        get_token_url =(self.urls.
+                        filter(name__contains=key_finder).
+                        last().name)
+        data = {
+            'username': validator.credentials.remote_username,
+            'password': validator.credentials.remote_password
+        }
+        url = self.urls_base[get_token_url]
+        headers=self.headers
+        params = {}
+        url_param = None
+        response = (self.methods['POST'](url=url['url_go'],
+                                headers=headers,
+                                data=data,
+                                url_param=url_param,
+                                params=params,
+                                param=params))
+        if response['status']:
+            resp = response['response']
+            response_data = (resp['data']
+                            if 'data' in 
+                            resp.keys() else resp)
+            staged =(settings.
+                        REDIS_HANDLER.
+                        set_qr_validator_jwt(key, response_data))
+            result['Authorization'] = f"Bearer {response_data['access']}"
         else:
-            # we look for it remotely.
-            get_token_url =(self.urls.
-                            filter(name__contains=key_finder).
-                            last().name)
-            data = {
-                'username': validator.credentials.remote_username,
-                'password': validator.credentials.remote_password
-            }
-            url = self.urls_base[get_token_url]
-            headers=self.headers
-            params = {}
-            url_param = None
-            response = (self.methods['POST'](url=url['url_go'],
-                                 headers=headers,
-                                 data=data,
-                                 url_param=url_param,
-                                 params=params,
-                                 param=params))
-            if response['status']:
-                response_data = response['response']
-                staged =(settings.
-                         REDIS_HANDLER.
-                         set_qr_validator_jwt(key, response_data))
-                result['Authorization'] = f"Bearer {response_data['access']}"
-            else:
-                raise Exception(response['response'])            
+            raise Exception(response['response'])            
         return result
 
-    
+    # need to finish this method and implement it.
     def refresh_jwt_credentials(self, validator=None):
         """
         this is a method that
