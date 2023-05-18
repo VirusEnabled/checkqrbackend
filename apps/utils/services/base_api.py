@@ -1,8 +1,7 @@
 from datetime import datetime
 import requests
 from django.conf import settings
-
-
+from simplejson.errors import JSONDecodeError
 # needs to be fixed because we need to use this helper
 # in order to implement what we need for the project.
 class BaseApi(object):
@@ -88,6 +87,40 @@ class BaseApi(object):
             'Content-Type': 'application/json'
         }
 
+    def process_response(self, response, method_called):
+        """
+        processes the 
+        response in order to have
+        the implementation cleaned 
+        so that we can avoid errors
+        coming from the site in the parsing
+        or json decoding.
+        :params:
+            response: requests response.
+            method_called: str: tag for the 
+            method. this is used in order to 
+            trigger the right error message.
+        :return: dict
+        """
+        result = {}
+        error_tags = {
+           'json_error': 'internal_error_parsing',
+           'no_found': 'internal_not_found',
+           'internal_error':'internal_error'
+        }
+        try:
+            result = response.json()
+
+        except JSONDecodeError:
+            result = {'error': error_tags['json_error']
+                               if response.status_code == 500 
+                               else error_tags['not_found']
+                               if response.status_code == 404 else
+                               error_tags['internal_error']}
+
+        return result
+
+
     def _get(self, **kwargs):
         """
         performs the GET method.
@@ -99,6 +132,7 @@ class BaseApi(object):
             rather than passed as paramter keys.
         :returns: dict
         """
+        TAG = 'GET'
         url = kwargs['url']
         url_param = kwargs['url_param']
         headers = kwargs['headers']
@@ -114,8 +148,11 @@ class BaseApi(object):
                                 params=params,
                                 timeout=self.timeout,
                                 json=data)
+        response_json = self.process_response(response, TAG)
         result['status'] = response.ok
-        result['response'] = response.json()
+        result['response'] = (response_json if 'data'
+                              in response_json.keys()
+                              else {'data': response_json})
         result['status_code'] = response.status_code
 
         return result
@@ -134,6 +171,7 @@ class BaseApi(object):
 
         :returns: dict
         """
+        TAG = 'POST'
         url = kwargs['url']
         url_param = kwargs['url_param']
         headers = kwargs['headers']
@@ -152,8 +190,9 @@ class BaseApi(object):
                                  json=data,
                                  params=parameters,
                                 timeout=self.timeout)
+        response_json = self.process_response(response, TAG)
         result['status'] = response.ok
-        result['response'] = response.json()
+        result['response'] = response_json
         result['status_code'] = response.status_code
 
         return result
@@ -169,6 +208,7 @@ class BaseApi(object):
             case of need directly in the url.
         :returns: dict
         """
+        TAG = 'PUT'
         url = kwargs['url']
         url_param = kwargs['url_param']
         headers = kwargs['headers']
@@ -187,8 +227,9 @@ class BaseApi(object):
                                  json=data,
                                  params=parameters,
                                 timeout=self.timeout)
+        response_json = self.process_response(response, TAG)
         result['status'] = response.ok
-        result['response'] = response.json()
+        result['response'] = response_json
         result['status_code'] = response.status_code
 
         return result
@@ -204,6 +245,7 @@ class BaseApi(object):
             case of need directly in the url.
         :returns: dict
         """
+        TAG = 'POST'
         url = kwargs['url']
         url_param = kwargs['url_param']
         headers = kwargs['headers']
@@ -222,8 +264,9 @@ class BaseApi(object):
                                  json=data,
                                  params=parameters,
                                 timeout=self.timeout)
+        response_json = self.process_response(response, TAG)
         result['status'] = response.ok
-        result['response'] = response.json()
+        result['response'] = response_json
         result['status_code'] = response.status_code
 
         return result

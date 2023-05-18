@@ -1,4 +1,4 @@
-from unittest import expectedFailure
+from unittest import expectedFailure, skip
 from apps.utils.tests.base import *
 import random
 
@@ -53,6 +53,27 @@ class ApiEndPointTestCase(BaseTestCaseBuilder):
 
     @expectedFailure
     def test_qr_scan_fail(self):
+        """
+        tests the implementation of the
+        qr
+        this is expected to fail since this 
+        depends of a third party
+        """
+        passed_token = self.app_user.auth_token.key
+        self.header['Authorization'] = f"Token {passed_token}"
+        (self.api_client.
+         credentials(HTTP_AUTHORIZATION=self.header['Authorization']))
+        urls = ['confirm_booking_POST',
+                'confirm_booking_GET']
+        self.header['Authorization'] = f"Token {self.app_user.auth_token.key}"
+        endpoint = reverse('api:qr_search')
+        request_data = {'qr_data': '83r43r3723',
+                        'url_name': random.choice(urls)}
+        response = self.api_client.post(endpoint, data=request_data)
+        self.assertEqual(response.status_code, 200, 'it couldn\'t load the qr data')
+
+    @skip('not mocked yet.')
+    def test_qr_scan(self):
         """
         tests the implementation of the
         qr

@@ -40,6 +40,7 @@ class ApplicationConfiguration(BaseModel,
     implements_checkout = models.BooleanField(default=False)
     needs_user_secret = models.BooleanField(default=False)
     uses_main_credentials = models.BooleanField(default=False)
+    uses_jwt_validation = models.BooleanField(default=False)
 
     def __str__(self) -> str:
         return f"Config for App: {self.application}"
@@ -53,7 +54,12 @@ class ApplicationUrl(BaseModel,
                                     related_name='urls')
     description = models.TextField(blank=True)
     url = models.CharField(max_length=500)
+    verbose_name = models.CharField(max_length=100,
+                                    null=True,
+                                    blank=True)
     requires_additional_formating = models.BooleanField(default=False)
+    is_only_search = models.BooleanField(default=False)
+    is_token_validate_url = models.BooleanField(default=False)
 
     def __str__(self) -> str:
         return self.name
