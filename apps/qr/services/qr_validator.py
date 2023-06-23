@@ -73,7 +73,8 @@ class ValidatorService(object):
                    'verbose_name': url.verbose_name,
                    'is_only_search': url.is_only_search} 
                   for url in self.application.
-                    urls.filter(is_token_validate_url=False)]
+                    urls.filter(is_token_validate_url=False,
+                                can_use=True)]
 
 
         return result

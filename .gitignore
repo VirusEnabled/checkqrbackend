@@ -12,6 +12,8 @@ dist/
 
 # Compiled Python bytecode
 *.py[cod]
+*.pyc
+*/migrations/
 
 # Log files
 *.log
@@ -47,4 +49,5 @@ Thumbs.db
 *.flv
 *.mov
 *.wmv
+
 
