@@ -60,6 +60,7 @@ class ApplicationUrl(BaseModel,
     requires_additional_formating = models.BooleanField(default=False)
     is_only_search = models.BooleanField(default=False)
     is_token_validate_url = models.BooleanField(default=False)
+    can_use = models.BooleanField(default=True)
 
     def __str__(self) -> str:
         return self.name

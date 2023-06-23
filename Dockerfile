@@ -1,6 +1,6 @@
 FROM python:3.9
 WORKDIR /code
-RUN apt update && apt-get install -y netcat libaio1 alien
+RUN apt update && apt-get install -y libaio1 alien
 
 COPY ./requirements.txt /code/requirements.txt
 COPY ./requirements /code/requirements
